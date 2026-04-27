@@ -6,8 +6,8 @@ on:
   pull_request:
     branches: [main, master]
   schedule:
-    # Runs every day at 06:00 UTC — catches API regressions overnight
-    - cron: "0 6 * * *"
+    # Runs every day at 05:00 UTC = 09:00 Yerevan time (UTC+4)
+    - cron: "0 5 * * *"
   workflow_dispatch:
     # Allows manual run from the GitHub Actions UI
 
