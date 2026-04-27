@@ -1,0 +1,25 @@
+# Environment — never commit real credentials
+.env
+
+# Python virtual environment
+.venv/
+venv/
+env/
+ENV/
+
+# Compiled Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# pytest
+.pytest_cache/
+report.html
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store

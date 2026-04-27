@@ -1,0 +1,1050 @@
+{
+  "test_scenarios": {
+    "authentication": {
+      "description": "User authentication: login and registration validation",
+      "test_cases": {
+        "positive_login": {
+          "description": "Valid login using credentials from environment",
+          "endpoint": "/api/auth/login",
+          "method": "POST",
+          "content_type": "form",
+          "auth_required": false,
+          "requires_env": ["OREGON_AUTH_EMAIL", "OREGON_AUTH_PASSWORD"],
+          "payload": {
+            "email": "{OREGON_AUTH_EMAIL}",
+            "password": "{OREGON_AUTH_PASSWORD}",
+            "remember_me": "0"
+          },
+          "expected_status": [200, 201],
+          "expected_response_keys": ["success", "data", "token", "access_token"],
+          "schema": "login",
+          "schema_validation": true
+        },
+        "negative_login_invalid_credentials": {
+          "description": "Login with wrong email and password",
+          "endpoint": "/api/auth/login",
+          "method": "POST",
+          "content_type": "form",
+          "auth_required": false,
+          "requires_env": [],
+          "payload": {
+            "email": "invalid@example.com",
+            "password": "wrong-password",
+            "remember_me": "0"
+          },
+          "expected_status": [400, 401, 422],
+          "expected_response_keys": ["errors", "message"],
+          "schema": null,
+          "schema_validation": false
+        },
+        "negative_login_empty_credentials": {
+          "description": "Login with empty email and password fields",
+          "endpoint": "/api/auth/login",
+          "method": "POST",
+          "content_type": "form",
+          "auth_required": false,
+          "requires_env": [],
+          "payload": {
+            "email": "",
+            "password": "",
+            "remember_me": "0"
+          },
+          "expected_status": [400, 401, 422],
+          "expected_response_keys": ["errors", "message"],
+          "schema": null,
+          "schema_validation": false
+        },
+        "negative_login_missing_fields": {
+          "description": "Login request missing the password field",
+          "endpoint": "/api/auth/login",
+          "method": "POST",
+          "content_type": "form",
+          "auth_required": false,
+          "requires_env": [],
+          "payload": {
+            "email": "test@example.com"
+          },
+          "expected_status": [400, 422],
+          "expected_response_keys": ["errors", "message"],
+          "schema": null,
+          "schema_validation": false
+        },
+        "negative_login_sql_injection": {
+          "description": "Login attempt with SQL injection payload",
+          "endpoint": "/api/auth/login",
+          "method": "POST",
+          "content_type": "form",
+          "auth_required": false,
+          "requires_env": [],
+          "payload": {
+            "email": "admin' OR '1'='1",
+            "password": "' OR '1'='1",
+            "remember_me": "0"
+          },
+          "expected_status": [400, 401, 422],
+          "expected_response_keys": ["errors", "message"],
+          "schema": null,
+          "schema_validation": false
+        },
+        "negative_register_invalid_data": {
+          "description": "Registration with all invalid field values",
+          "endpoint": "/api/auth/register",
+          "method": "POST",
+          "content_type": "form",
+          "auth_required": false,
+          "requires_env": [],
+          "payload": {
+            "full_name": "",
+            "usdot": "invalid",
+            "email": "invalid-email",
+            "cdd_account": "",
+            "phone": "invalid-phone",
+            "password": "123",
+            "password_confirmation": "456"
+          },
+          "expected_status": [400, 422],
+          "expected_response_keys": ["errors", "message"],
+          "schema": null,
+          "schema_validation": false
+        },
+        "negative_register_password_mismatch": {
+          "description": "Registration where password and confirmation do not match",
+          "endpoint": "/api/auth/register",
+          "method": "POST",
+          "content_type": "form",
+          "auth_required": false,
+          "requires_env": [],
+          "payload": {
+            "full_name": "Test User",
+            "usdot": "1234567",
+            "email": "test@example.com",
+            "cdd_account": "TEST123",
+            "phone": "(555) 123-4567",
+            "password": "password123",
+            "password_confirmation": "differentpassword"
+          },
+          "expected_status": [400, 422],
+          "expected_response_keys": ["errors", "message"],
+          "schema": null,
+          "schema_validation": false
+        }
+      }
+    },
+    "authorization": {
+      "description": "Authorization, user profile, and protected resource endpoints",
+      "test_cases": {
+        "positive_get_me_info": {
+          "description": "Retrieve authenticated user profile",
+          "endpoint": "/api/auth/me",
+          "method": "GET",
+          "content_type": "form",
+          "auth_required": true,
+          "requires_env": [],
+          "payload": null,
+          "expected_status": [200],
+          "expected_response_keys": ["success", "message", "data"],
+          "schema": "general",
+          "schema_validation": true
+        },
+        "negative_get_me_info_unauthorized": {
+          "description": "Access user profile without authentication token",
+          "endpoint": "/api/auth/me",
+          "method": "GET",
+          "content_type": "form",
+          "auth_required": false,
+          "requires_env": [],
+          "payload": null,
+          "expected_status": [401, 403],
+          "expected_response_keys": ["errors", "message"],
+          "schema": null,
+          "schema_validation": false
+        },
+        "positive_get_customer_cards": {
+          "description": "Retrieve saved customer payment methods",
+          "endpoint": "/api/auth/customer-cards",
+          "method": "GET",
+          "content_type": "form",
+          "auth_required": true,
+          "requires_env": [],
+          "payload": null,
+          "expected_status": [200],
+          "expected_response_keys": ["success", "message", "data"],
+          "schema": "general",
+          "schema_validation": true
+        },
+        "positive_get_weight_groups": {
+          "description": "Retrieve weight classification groups (requires auth)",
+          "endpoint": "/api/weight-groups",
+          "method": "GET",
+          "content_type": "form",
+          "auth_required": true,
+          "requires_env": [],
+          "payload": null,
+          "expected_status": [200],
+          "expected_response_keys": ["success", "message", "data"],
+          "schema": "list",
+          "schema_validation": true
+        },
+        "negative_get_weight_groups_unauthorized": {
+          "description": "Access weight groups without authentication token",
+          "endpoint": "/api/weight-groups",
+          "method": "GET",
+          "content_type": "form",
+          "auth_required": false,
+          "requires_env": [],
+          "payload": null,
+          "expected_status": [401, 403],
+          "expected_response_keys": ["errors", "message"],
+          "schema": null,
+          "schema_validation": false
+        },
+        "positive_get_filing_options": {
+          "description": "Retrieve filing options for type ID 2",
+          "endpoint": "/api/filing-options/2",
+          "method": "GET",
+          "content_type": "form",
+          "auth_required": true,
+          "requires_env": [],
+          "payload": null,
+          "expected_status": [200],
+          "expected_response_keys": ["success", "message", "data"],
+          "schema": "general",
+          "schema_validation": true
+        },
+        "negative_get_filing_options_invalid_id": {
+          "description": "Retrieve filing options with a non-numeric ID",
+          "endpoint": "/api/filing-options/invalid",
+          "method": "GET",
+          "content_type": "form",
+          "auth_required": true,
+          "requires_env": [],
+          "payload": null,
+          "expected_status": [400, 404, 422],
+          "expected_response_keys": ["errors", "message"],
+          "schema": null,
+          "schema_validation": false
+        },
+        "positive_logout": {
+          "description": "Successful logout with a valid token",
+          "endpoint": "/api/auth/logout",
+          "method": "POST",
+          "content_type": "form",
+          "auth_required": true,
+          "requires_env": [],
+          "payload": null,
+          "expected_status": [200],
+          "expected_response_keys": ["success", "message"],
+          "schema": "general",
+          "schema_validation": true
+        },
+        "negative_logout_unauthorized": {
+          "description": "Logout attempt without an authentication token",
+          "endpoint": "/api/auth/logout",
+          "method": "POST",
+          "content_type": "form",
+          "auth_required": false,
+          "requires_env": [],
+          "payload": null,
+          "expected_status": [401, 403],
+          "expected_response_keys": ["errors", "message"],
+          "schema": null,
+          "schema_validation": false
+        }
+      }
+    },
+    "report_management": {
+      "description": "Report creation, retrieval, listing, and status endpoints",
+      "test_cases": {
+        "positive_report_create": {
+          "description": "Create a valid report — REPORT_ID and VEHICLE_ID are persisted from the response",
+          "endpoint": "/api/report",
+          "method": "POST",
+          "content_type": "json",
+          "auth_required": true,
+          "requires_env": [],
+          "payload": {
+            "business_name": "Larissa Rau",
+            "phone": "(344) 444-4444",
+            "mailing_address": "79127 O'Hara Village",
+            "mailing_city": "Lake Dedrick",
+            "mailing_state": 58,
+            "mailing_zip_code": "14105-0545",
+            "physical_address": "99938 Tomasa Mount",
+            "physical_city": "Port Nikolasside",
+            "physical_state": 58,
+            "physical_zip_code": "06351-4232",
+            "filing_type": "monthly",
+            "filing_month": 3,
+            "filing_quarter": null,
+            "filing_year": "2026",
+            "vehicles": [
+              {
+                "id": null,
+                "license_plate": "dfgdfg",
+                "vin": "WWWWWWWWWWWWWWW66",
+                "state": 1,
+                "unit_number": "25M845",
+                "make": "BASHAN",
+                "declared_weight": 6,
+                "odometer_beginning": null,
+                "odometer_ending": null,
+                "taxable_miles": 2300,
+                "axles_count": 0
+              }
+            ]
+          },
+          "expected_status": [200, 422],
+          "expected_response_keys": ["success", "message", "data"],
+          "schema": "general",
+          "schema_validation": true
+        },
+        "negative_report_create_missing_required": {
+          "description": "Create report with only phone field — all required fields missing",
+          "endpoint": "/api/report",
+          "method": "POST",
+          "content_type": "json",
+          "auth_required": true,
+          "requires_env": [],
+          "payload": {
+            "phone": "(344) 444-4444"
+          },
+          "expected_status": [400, 422],
+          "expected_response_keys": ["errors", "message"],
+          "schema": null,
+          "schema_validation": false
+        },
+        "negative_report_create_empty_vehicles": {
+          "description": "Create report with an empty vehicles array",
+          "endpoint": "/api/report",
+          "method": "POST",
+          "content_type": "json",
+          "auth_required": true,
+          "requires_env": [],
+          "payload": {
+            "business_name": "Test Business",
+            "phone": "(555) 123-4567",
+            "mailing_address": "123 Test St",
+            "mailing_city": "Test City",
+            "mailing_state": 1,
+            "mailing_zip_code": "12345-6789",
+            "physical_address": "456 Physical St",
+            "physical_city": "Physical City",
+            "physical_state": 1,
+            "physical_zip_code": "98765-4321",
+            "filing_type": "monthly",
+            "filing_month": 1,
+            "filing_year": "2024",
+            "vehicles": []
+          },
+          "expected_status": [400, 422],
+          "expected_response_keys": ["errors", "message"],
+          "schema": null,
+          "schema_validation": false
+        },
+        "negative_report_create_invalid_filing_type": {
+          "description": "Create report with an unrecognised filing_type value",
+          "endpoint": "/api/report",
+          "method": "POST",
+          "content_type": "json",
+          "auth_required": true,
+          "requires_env": [],
+          "payload": {
+            "business_name": "Test Business",
+            "phone": "(555) 123-4567",
+            "mailing_address": "123 Test St",
+            "mailing_city": "Test City",
+            "mailing_state": 1,
+            "mailing_zip_code": "12345-6789",
+            "physical_address": "456 Physical St",
+            "physical_city": "Physical City",
+            "physical_state": 1,
+            "physical_zip_code": "98765-4321",
+            "filing_type": "invalid_type",
+            "filing_month": 1,
+            "filing_year": "2024",
+            "vehicles": [
+              {
+                "license_plate": "ABC123",
+                "vin": "1HGCM82633A123456",
+                "state": 1,
+                "unit_number": "UNIT001",
+                "make": "TOYOTA",
+                "declared_weight": 5,
+                "taxable_miles": 1000,
+                "axles_count": 2
+              }
+            ]
+          },
+          "expected_status": [400, 422],
+          "expected_response_keys": ["errors", "message"],
+          "schema": null,
+          "schema_validation": false
+        },
+        "negative_report_create_invalid_state_ids": {
+          "description": "Create report with non-existent state IDs (999) in all state fields",
+          "endpoint": "/api/report",
+          "method": "POST",
+          "content_type": "json",
+          "auth_required": true,
+          "requires_env": [],
+          "payload": {
+            "business_name": "Test Business",
+            "phone": "(555) 123-4567",
+            "mailing_address": "123 Test St",
+            "mailing_city": "Test City",
+            "mailing_state": 999,
+            "mailing_zip_code": "12345-6789",
+            "physical_address": "456 Physical St",
+            "physical_city": "Physical City",
+            "physical_state": 999,
+            "physical_zip_code": "98765-4321",
+            "filing_type": "monthly",
+            "filing_month": 1,
+            "filing_year": "2024",
+            "vehicles": [
+              {
+                "license_plate": "ABC123",
+                "vin": "1HGCM82633A123456",
+                "state": 999,
+                "unit_number": "UNIT001",
+                "make": "TOYOTA",
+                "declared_weight": 5,
+                "taxable_miles": 1000,
+                "axles_count": 2
+              }
+            ]
+          },
+          "expected_status": [400, 422],
+          "expected_response_keys": ["errors", "message"],
+          "schema": null,
+          "schema_validation": false
+        },
+        "positive_report_show": {
+          "description": "Retrieve an existing report by REPORT_ID from env",
+          "endpoint": "/api/report/show/{REPORT_ID}",
+          "method": "GET",
+          "content_type": "form",
+          "auth_required": true,
+          "requires_env": ["REPORT_ID"],
+          "payload": null,
+          "expected_status": [200],
+          "expected_response_keys": ["success", "message", "data"],
+          "schema": "general",
+          "schema_validation": true
+        },
+        "negative_report_show_invalid_id": {
+          "description": "Retrieve report with hardcoded invalid ID 999999",
+          "endpoint": "/api/report/show/999999",
+          "method": "GET",
+          "content_type": "form",
+          "auth_required": true,
+          "requires_env": [],
+          "payload": null,
+          "expected_status": [400, 403, 404, 422],
+          "expected_response_keys": ["errors", "message"],
+          "schema": null,
+          "schema_validation": false
+        },
+        "positive_get_reports": {
+          "description": "List reports with valid pagination and sort parameters",
+          "endpoint": "/api/report",
+          "method": "GET",
+          "content_type": "form",
+          "auth_required": true,
+          "requires_env": [],
+          "params": {
+            "page": "1",
+            "sort_by": "id",
+            "sort_dir": "desc"
+          },
+          "payload": null,
+          "expected_status": [200],
+          "expected_response_keys": ["success", "message", "data"],
+          "schema": "list",
+          "schema_validation": true
+        },
+        "negative_get_reports_invalid_params": {
+          "description": "List reports with invalid sort field and direction — API handles gracefully",
+          "endpoint": "/api/report",
+          "method": "GET",
+          "content_type": "form",
+          "auth_required": true,
+          "requires_env": [],
+          "params": {
+            "page": "-1",
+            "sort_by": "invalid_field",
+            "sort_dir": "invalid_direction"
+          },
+          "payload": null,
+          "expected_status": [200],
+          "expected_response_keys": ["success", "message", "data"],
+          "schema": "list",
+          "schema_validation": true
+        },
+        "positive_report_filtered_count": {
+          "description": "Retrieve filtered report statistics",
+          "endpoint": "/api/report/filtered-info",
+          "method": "GET",
+          "content_type": "form",
+          "auth_required": true,
+          "requires_env": [],
+          "payload": null,
+          "expected_status": [200],
+          "expected_response_keys": ["success", "message", "data"],
+          "schema": "general",
+          "schema_validation": true
+        },
+        "negative_report_filtered_count_unauthorized": {
+          "description": "Access filtered report info without authentication",
+          "endpoint": "/api/report/filtered-info",
+          "method": "GET",
+          "content_type": "form",
+          "auth_required": false,
+          "requires_env": [],
+          "payload": null,
+          "expected_status": [401, 403],
+          "expected_response_keys": ["errors", "message"],
+          "schema": null,
+          "schema_validation": false
+        }
+      }
+    },
+    "vehicle_operations": {
+      "description": "Vehicle update and removal on reports",
+      "test_cases": {
+        "positive_vehicle_update": {
+          "description": "Update a single vehicle on an existing report",
+          "endpoint": "/api/report/vehicles/update",
+          "method": "POST",
+          "content_type": "json",
+          "auth_required": true,
+          "requires_env": ["REPORT_ID"],
+          "payload": {
+            "report_id": "{REPORT_ID}",
+            "vehicles": [
+              {
+                "id": null,
+                "license_plate": "125464546",
+                "vin": "LHJJJJJJJJJJJJJJ8",
+                "state": 10,
+                "unit_number": "25M845",
+                "make": "BASHAN",
+                "declared_weight": 2,
+                "odometer_beginning": 3,
+                "odometer_ending": 6,
+                "taxable_miles": 80,
+                "axles_count": 1
+              }
+            ]
+          },
+          "expected_status": [200, 403, 422],
+          "expected_response_keys": ["success", "message", "data"],
+          "schema": "general",
+          "schema_validation": true
+        },
+        "positive_vehicle_update_multiple": {
+          "description": "Update three vehicles on an existing report",
+          "endpoint": "/api/report/vehicles/update",
+          "method": "POST",
+          "content_type": "json",
+          "auth_required": true,
+          "requires_env": ["REPORT_ID"],
+          "payload": {
+            "report_id": "{REPORT_ID}",
+            "vehicles": [
+              {
+                "id": null,
+                "license_plate": "125464546",
+                "vin": "LHJJJJJJJJJJJJJJu",
+                "state": 10,
+                "unit_number": "25M845",
+                "make": "BASHAN",
+                "declared_weight": 2,
+                "odometer_beginning": 3,
+                "odometer_ending": 6,
+                "taxable_miles": 80,
+                "axles_count": 1
+              },
+              {
+                "id": null,
+                "license_plate": "125464546",
+                "vin": "LHHJJJJJJJJJJJJJt",
+                "state": 10,
+                "unit_number": "25M6845",
+                "make": "BASHAN",
+                "declared_weight": 40,
+                "odometer_beginning": 3,
+                "odometer_ending": 4,
+                "taxable_miles": 77,
+                "axles_count": 7
+              },
+              {
+                "id": null,
+                "license_plate": "125464546",
+                "vin": "LHHJJJJJJJJJJJJJs",
+                "state": 1,
+                "unit_number": "25M845999",
+                "make": "BASHAN",
+                "declared_weight": 23,
+                "odometer_beginning": 2,
+                "odometer_ending": 4,
+                "taxable_miles": 3,
+                "axles_count": 1
+              }
+            ]
+          },
+          "expected_status": [200, 403, 422],
+          "expected_response_keys": ["success", "message", "data"],
+          "schema": "general",
+          "schema_validation": true
+        },
+        "negative_vehicle_update_invalid_data": {
+          "description": "Update vehicle with invalid field values (empty plate, bad VIN, negative weight)",
+          "endpoint": "/api/report/vehicles/update",
+          "method": "POST",
+          "content_type": "json",
+          "auth_required": true,
+          "requires_env": ["REPORT_ID"],
+          "payload": {
+            "report_id": "{REPORT_ID}",
+            "vehicles": [
+              {
+                "id": null,
+                "license_plate": "",
+                "vin": "INVALIDVIN",
+                "state": 999,
+                "unit_number": "25M845",
+                "make": "BASHAN",
+                "declared_weight": -1,
+                "odometer_beginning": 10,
+                "odometer_ending": 5,
+                "taxable_miles": -50,
+                "axles_count": 0
+              }
+            ]
+          },
+          "expected_status": [400, 422],
+          "expected_response_keys": ["errors", "message"],
+          "schema": null,
+          "schema_validation": false
+        },
+        "negative_vehicle_update_without_report_id": {
+          "description": "Update vehicles without supplying report_id",
+          "endpoint": "/api/report/vehicles/update",
+          "method": "POST",
+          "content_type": "json",
+          "auth_required": true,
+          "requires_env": [],
+          "payload": {
+            "vehicles": [
+              {
+                "license_plate": "XYZ789",
+                "vin": "JH4KA8260MC123456",
+                "state": 2,
+                "unit_number": "UNIT002",
+                "make": "HONDA",
+                "declared_weight": 3,
+                "taxable_miles": 500,
+                "axles_count": 2
+              }
+            ]
+          },
+          "expected_status": [400, 422],
+          "expected_response_keys": ["errors", "message"],
+          "schema": null,
+          "schema_validation": false
+        },
+        "negative_vehicle_update_empty_vehicles": {
+          "description": "Update with an empty vehicles array",
+          "endpoint": "/api/report/vehicles/update",
+          "method": "POST",
+          "content_type": "json",
+          "auth_required": true,
+          "requires_env": ["REPORT_ID"],
+          "payload": {
+            "report_id": "{REPORT_ID}",
+            "vehicles": []
+          },
+          "expected_status": [400, 422],
+          "expected_response_keys": ["errors", "message"],
+          "schema": null,
+          "schema_validation": false
+        },
+        "negative_vehicle_remove_invalid_id": {
+          "description": "Remove vehicle with hardcoded invalid ID 999999",
+          "endpoint": "/api/report/vehicles/remove/999999",
+          "method": "POST",
+          "content_type": "form",
+          "auth_required": true,
+          "requires_env": [],
+          "payload": null,
+          "expected_status": [400, 403, 404, 422],
+          "expected_response_keys": ["errors", "message"],
+          "schema": null,
+          "schema_validation": false
+        },
+        "positive_vehicle_remove": {
+          "description": "Remove an existing vehicle by VEHICLE_ID from env",
+          "endpoint": "/api/report/vehicles/remove/{VEHICLE_ID}",
+          "method": "POST",
+          "content_type": "form",
+          "auth_required": true,
+          "requires_env": ["VEHICLE_ID"],
+          "payload": null,
+          "expected_status": [200, 403],
+          "expected_response_keys": ["success", "message"],
+          "schema": "general",
+          "schema_validation": true
+        }
+      }
+    },
+    "payment_processing": {
+      "description": "Payment submission and card validation",
+      "test_cases": {
+        "positive_report_pay": {
+          "description": "Process payment with valid Amex card details for an existing report",
+          "endpoint": "/api/report/pay",
+          "method": "POST",
+          "content_type": "json",
+          "auth_required": true,
+          "requires_env": ["REPORT_ID"],
+          "payload": {
+            "report_id": "{REPORT_ID}",
+            "card_number": "371449635398431",
+            "card_holder": "sss",
+            "card_expiration_date": "01/28",
+            "card_cvc": "1255",
+            "billing_address": "99938 Tomasa Mount",
+            "billing_city": "Port Nikolasside",
+            "billing_state": 58,
+            "billing_zip_code": "06351-4232",
+            "initial": "AA",
+            "signature_title": "Victor",
+            "signature": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+          },
+          "expected_status": [200, 403, 422],
+          "expected_response_keys": ["success", "message", "data"],
+          "schema": "general",
+          "schema_validation": true
+        },
+        "negative_report_pay_invalid_card": {
+          "description": "Payment with invalid card expiration (13/99) and non-numeric CVC",
+          "endpoint": "/api/report/pay",
+          "method": "POST",
+          "content_type": "json",
+          "auth_required": true,
+          "requires_env": ["REPORT_ID"],
+          "payload": {
+            "report_id": "{REPORT_ID}",
+            "card_number": "4111111111111111",
+            "card_holder": "sss",
+            "card_expiration_date": "13/99",
+            "card_cvc": "abc",
+            "billing_address": "99938 Tomasa Mount",
+            "billing_city": "Port Nikolasside",
+            "billing_state": 58,
+            "billing_zip_code": "06351-4232",
+            "initial": "AA",
+            "signature_title": "Victor",
+            "signature": "data:image/png;base64,invalid"
+          },
+          "expected_status": [400, 422],
+          "expected_response_keys": ["errors", "message"],
+          "schema": null,
+          "schema_validation": false
+        },
+        "negative_report_pay_without_report_id": {
+          "description": "Payment request with no report_id field",
+          "endpoint": "/api/report/pay",
+          "method": "POST",
+          "content_type": "json",
+          "auth_required": true,
+          "requires_env": [],
+          "payload": {
+            "card_number": "4111111111111111",
+            "card_holder": "John Doe",
+            "card_expiration_date": "12/25",
+            "card_cvc": "123",
+            "billing_address": "123 Billing St",
+            "billing_city": "Billing City",
+            "billing_state": 1,
+            "billing_zip_code": "12345-6789",
+            "initial": "JD",
+            "signature_title": "Customer",
+            "signature": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+          },
+          "expected_status": [400, 422],
+          "expected_response_keys": ["errors", "message"],
+          "schema": null,
+          "schema_validation": false
+        },
+        "negative_report_pay_expired_card": {
+          "description": "Payment with an expired card (01/20)",
+          "endpoint": "/api/report/pay",
+          "method": "POST",
+          "content_type": "json",
+          "auth_required": true,
+          "requires_env": ["REPORT_ID"],
+          "payload": {
+            "report_id": "{REPORT_ID}",
+            "card_number": "4111111111111111",
+            "card_holder": "John Doe",
+            "card_expiration_date": "01/20",
+            "card_cvc": "123",
+            "billing_address": "123 Billing St",
+            "billing_city": "Billing City",
+            "billing_state": 1,
+            "billing_zip_code": "12345-6789",
+            "initial": "JD",
+            "signature_title": "Customer",
+            "signature": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+          },
+          "expected_status": [400, 422],
+          "expected_response_keys": ["errors", "message"],
+          "schema": null,
+          "schema_validation": false
+        }
+      }
+    },
+    "data_retrieval": {
+      "description": "Lookup endpoints: zip codes, states, USDOT, user vehicles",
+      "test_cases": {
+        "positive_get_zip_info": {
+          "description": "Retrieve valid zip code information for 00501",
+          "endpoint": "/api/get-zip-info",
+          "method": "GET",
+          "content_type": "form",
+          "auth_required": false,
+          "requires_env": [],
+          "params": {"zip": "00501"},
+          "payload": null,
+          "expected_status": [200],
+          "expected_response_keys": ["success", "message", "data"],
+          "schema": "zip",
+          "schema_validation": true
+        },
+        "negative_get_zip_info_invalid": {
+          "description": "Retrieve zip info for all-zero code 00000",
+          "endpoint": "/api/get-zip-info",
+          "method": "GET",
+          "content_type": "form",
+          "auth_required": false,
+          "requires_env": [],
+          "params": {"zip": "00000"},
+          "payload": null,
+          "expected_status": [200, 400, 404, 422],
+          "expected_response_keys": ["errors", "message", "data"],
+          "schema": null,
+          "schema_validation": false
+        },
+        "positive_get_states": {
+          "description": "Retrieve the full list of states (public endpoint)",
+          "endpoint": "/api/states",
+          "method": "GET",
+          "content_type": "form",
+          "auth_required": false,
+          "requires_env": [],
+          "payload": null,
+          "expected_status": [200],
+          "expected_response_keys": ["success", "message", "data"],
+          "schema": "list",
+          "schema_validation": true
+        },
+        "positive_get_usdot_info": {
+          "description": "Retrieve USDOT carrier info for number 2247310",
+          "endpoint": "/api/usdot-info",
+          "method": "GET",
+          "content_type": "form",
+          "auth_required": false,
+          "requires_env": [],
+          "params": {"usdot": "2247310"},
+          "payload": null,
+          "expected_status": [200],
+          "expected_response_keys": ["success", "message", "data"],
+          "schema": "general",
+          "schema_validation": true
+        },
+        "negative_get_usdot_info_invalid": {
+          "description": "Retrieve USDOT info with a non-numeric value",
+          "endpoint": "/api/usdot-info",
+          "method": "GET",
+          "content_type": "form",
+          "auth_required": false,
+          "requires_env": [],
+          "params": {"usdot": "invalid"},
+          "payload": null,
+          "expected_status": [400, 404, 422],
+          "expected_response_keys": ["errors", "message"],
+          "schema": null,
+          "schema_validation": false
+        },
+        "positive_get_user_vehicles": {
+          "description": "Retrieve paginated user vehicle list (page 1)",
+          "endpoint": "/api/user-vehicles",
+          "method": "GET",
+          "content_type": "form",
+          "auth_required": true,
+          "requires_env": [],
+          "params": {"page": "1"},
+          "payload": null,
+          "expected_status": [200],
+          "expected_response_keys": ["success", "message", "data"],
+          "schema": "list",
+          "schema_validation": true
+        },
+        "positive_get_user_vehicles_invalid_page": {
+          "description": "User vehicles with non-numeric page — API handles gracefully",
+          "endpoint": "/api/user-vehicles",
+          "method": "GET",
+          "content_type": "form",
+          "auth_required": true,
+          "requires_env": [],
+          "params": {"page": "abc"},
+          "payload": null,
+          "expected_status": [200],
+          "expected_response_keys": ["success", "message", "data"],
+          "schema": "list",
+          "schema_validation": true
+        }
+      }
+    },
+    "calculation_services": {
+      "description": "Use-tax and mileage calculation endpoint",
+      "test_cases": {
+        "positive_calculate_taxable_miles": {
+          "description": "Calculate use-tax with standard valid inputs",
+          "endpoint": "/api/calculate-use-tax",
+          "method": "POST",
+          "content_type": "form",
+          "auth_required": true,
+          "requires_env": [],
+          "payload": {
+            "weight_id": "22",
+            "axles_count": "3",
+            "taxable_miles": "1500"
+          },
+          "expected_status": [200],
+          "expected_response_keys": ["success", "message", "data"],
+          "schema": "general",
+          "schema_validation": true
+        },
+        "positive_calculate_taxable_miles_boundary": {
+          "description": "Calculate use-tax with minimum boundary values (weight=1, axles=1, miles=0)",
+          "endpoint": "/api/calculate-use-tax",
+          "method": "POST",
+          "content_type": "form",
+          "auth_required": true,
+          "requires_env": [],
+          "payload": {
+            "weight_id": "1",
+            "axles_count": "1",
+            "taxable_miles": "0"
+          },
+          "expected_status": [200, 400, 422],
+          "expected_response_keys": ["success", "message", "errors"],
+          "schema": null,
+          "schema_validation": false
+        },
+        "positive_calculate_taxable_miles_large_values": {
+          "description": "Calculate use-tax with very large weight and mileage values",
+          "endpoint": "/api/calculate-use-tax",
+          "method": "POST",
+          "content_type": "form",
+          "auth_required": true,
+          "requires_env": [],
+          "payload": {
+            "weight_id": "999999",
+            "axles_count": "100",
+            "taxable_miles": "1000000"
+          },
+          "expected_status": [200, 400, 422],
+          "expected_response_keys": ["success", "message", "errors"],
+          "schema": null,
+          "schema_validation": false
+        },
+        "negative_calculate_taxable_miles_missing_fields": {
+          "description": "Calculate with only weight_id — axles_count and taxable_miles missing",
+          "endpoint": "/api/calculate-use-tax",
+          "method": "POST",
+          "content_type": "form",
+          "auth_required": true,
+          "requires_env": [],
+          "payload": {
+            "weight_id": "22"
+          },
+          "expected_status": [400, 422],
+          "expected_response_keys": ["errors", "message"],
+          "schema": null,
+          "schema_validation": false
+        },
+        "negative_calculate_taxable_miles_invalid_values": {
+          "description": "Calculate with non-numeric and negative field values",
+          "endpoint": "/api/calculate-use-tax",
+          "method": "POST",
+          "content_type": "form",
+          "auth_required": true,
+          "requires_env": [],
+          "payload": {
+            "weight_id": "invalid",
+            "axles_count": "-1",
+            "taxable_miles": "not-a-number"
+          },
+          "expected_status": [400, 422],
+          "expected_response_keys": ["errors", "message"],
+          "schema": null,
+          "schema_validation": false
+        }
+      }
+    }
+  },
+  "test_execution_order": [
+    "authentication",
+    "authorization",
+    "report_management",
+    "vehicle_operations",
+    "data_retrieval",
+    "calculation_services",
+    "payment_processing"
+  ],
+  "test_priorities": {
+    "critical": [
+      "positive_login",
+      "positive_report_create",
+      "positive_vehicle_update",
+      "positive_report_pay"
+    ],
+    "high": [
+      "negative_login_invalid_credentials",
+      "negative_report_create_missing_required",
+      "negative_vehicle_update_invalid_data",
+      "negative_report_pay_invalid_card"
+    ],
+    "medium": [
+      "positive_get_zip_info",
+      "positive_get_states",
+      "positive_calculate_taxable_miles",
+      "positive_get_me_info",
+      "positive_report_filtered_count"
+    ],
+    "low": [
+      "negative_get_zip_info_invalid",
+      "negative_calculate_taxable_miles_invalid_values",
+      "positive_calculate_taxable_miles_boundary",
+      "positive_calculate_taxable_miles_large_values"
+    ]
+  },
+  "test_data_requirements": {
+    "environment_variables": [
+      "OREGON_BASE_URL",
+      "OREGON_AUTH_EMAIL",
+      "OREGON_AUTH_PASSWORD",
+      "OREGON_AUTH_TOKEN",
+      "REPORT_ID",
+      "VEHICLE_ID"
+    ],
+    "dynamic_data_generation": [
+      "report_id_from_creation",
+      "vehicle_id_from_update"
+    ]
+  }
+}
