@@ -127,6 +127,20 @@
           "expected_response_keys": ["errors", "message"],
           "schema": null,
           "schema_validation": false
+        },
+        "positive_register": {
+          "description": "Register a new account with auto-generated unique credentials (payload built dynamically in Python)",
+          "endpoint": "/api/auth/register",
+          "method": "POST",
+          "content_type": "form",
+          "auth_required": false,
+          "requires_env": [],
+          "dynamic": true,
+          "payload": null,
+          "expected_status": [200, 201],
+          "expected_response_keys": ["success", "message", "data", "token", "access_token"],
+          "schema": "general",
+          "schema_validation": true
         }
       }
     },

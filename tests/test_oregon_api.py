@@ -1,7 +1,9 @@
 import json
 import os
+import random
 import re
 import time
+import uuid
 from pathlib import Path
 
 import pytest
@@ -317,6 +319,24 @@ def test_login(base_url, headers):
 @pytest.mark.parametrize("case", _cases("authentication", "negative_login"))
 def test_login_negative(base_url, headers, case):
     response = _do_request(base_url, case, headers)
+    _assert_case(response, case)
+
+
+def test_register_positive(base_url, headers):
+    case = tc("authentication", "positive_register")
+    uid = uuid.uuid4().hex[:10]
+    area = random.randint(200, 999)
+    payload = {
+        "full_name": f"Test User {uid}",
+        "usdot": str(random.randint(1000000, 9999999)),
+        "email": f"testuser_{uid}@mailinator.com",
+        "cdd_account": f"TEST{uid.upper()}",
+        "phone": f"({area}) {random.randint(100, 999)}-{random.randint(1000, 9999)}",
+        "password": f"TestPass{uid}!",
+        "password_confirmation": f"TestPass{uid}!",
+    }
+    response = make_request("POST", f"{base_url}{case['endpoint']}",
+                            headers=headers, data=payload, timeout=30)
     _assert_case(response, case)
 
 
