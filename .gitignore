@@ -17,6 +17,9 @@ __pycache__/
 .pytest_cache/
 report.html
 
+# Claude Code internal files (may contain tokens/permissions)
+.claude/
+
 # IDE
 .idea/
 .vscode/

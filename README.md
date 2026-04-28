@@ -178,3 +178,10 @@ OREGON_AUTH_TOKEN        Bearer token — auto-saved after login, auto-validated
 REPORT_ID                Persisted after test_report_create succeeds
 VEHICLE_ID               Persisted after test_vehicle_update succeeds
 ```
+<!-- cd C:\actions-runner; .\config.cmd --runasservice -->
+
+<!-- $action = New-ScheduledTaskAction -Execute "cmd.exe" -Argument "/c C:\actions-runner\run.cmd" -WorkingDirectory "C:\actions-runner"
+$trigger = New-ScheduledTaskTrigger -AtLogOn
+Register-ScheduledTask -TaskName "GitHubRunner" -Action $action -Trigger $trigger -RunLevel Highest -Force
+Start-ScheduledTask -TaskName "GitHubRunner" -->
+
