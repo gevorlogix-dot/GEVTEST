@@ -33,6 +33,7 @@ jobs:
           OREGON_BASE_URL:      ${{ secrets.OREGON_BASE_URL }}
           OREGON_AUTH_EMAIL:    ${{ secrets.OREGON_AUTH_EMAIL }}
           OREGON_AUTH_PASSWORD: ${{ secrets.OREGON_AUTH_PASSWORD }}
+          OREGON_AUTH_TOKEN:    ${{ secrets.OREGON_AUTH_TOKEN }}
         run: pytest
 
       - name: Upload HTML report

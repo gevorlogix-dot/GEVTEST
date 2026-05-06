@@ -41,7 +41,9 @@ def _cases(scenario: str, prefix: str = "") -> list:
 
 def env_var(name: str, default: str | None = None) -> str | None:
     value = os.getenv(name, default)
-    return default if (value is not None and value.strip() == "") else value
+    if value is not None:
+        value = value.strip()
+    return default if (value is not None and value == "") else value
 
 
 def _persist_env_variable(name: str, value) -> None:
