@@ -129,14 +129,21 @@
           "schema_validation": false
         },
         "positive_register": {
-          "description": "Register a new account with auto-generated unique credentials (payload built dynamically in Python)",
+          "description": "Register a new account — email is randomised per run to avoid duplicate conflicts",
           "endpoint": "/api/auth/register",
           "method": "POST",
           "content_type": "form",
           "auth_required": false,
           "requires_env": [],
           "dynamic": true,
-          "payload": null,
+          "payload": {
+            "full_name": "Gevorg testttt testttt",
+            "phone": "(577) 777-7777",
+            "usdot": "80806",
+            "cdd_account": "hkhjk",
+            "password": "Gg093125128#",
+            "password_confirmation": "Gg093125128#"
+          },
           "expected_status": [200, 201],
           "expected_response_keys": ["success", "message", "data", "token", "access_token"],
           "schema": "general",
